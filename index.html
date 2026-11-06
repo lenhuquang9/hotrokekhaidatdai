@@ -105,7 +105,6 @@
     .btn-submit { width: 100%; max-width: 440px; padding: 16px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
     .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(16, 185, 129, 0.45); }
     .btn-submit:active { transform: translateY(0); }
-    
     .submit-note { font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 600; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.4; }
     
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 16px; overflow-y: auto; }
@@ -116,15 +115,13 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     
     .btn-download-pdf { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: var(--accent); color: white !important; padding: 15px 24px; border-radius: 12px; font-weight: 700; font-size: 15px; width: 100%; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); margin-top: 10px; }
-    
     .success-check-icon { width: 68px; height: 68px; background: #ecfdf5; border: 3px solid #10b981; border-radius: 50%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 34px; color: #10b981; animation: scaleUp 0.35s ease-in-out; }
     @keyframes scaleUp { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-    /* CSS CSS MỚI CHO QUÉT CAMERA: ÉP KHÔNG NHẬN TƯƠNG TÁC ĐỂ TRÁNH MỞ FULL MÀN HÌNH */
+    /* CSS ĐẶC BIỆT CHỐNG LỖI MÀN HÌNH ĐEN TRÊN IPHONE SAFARI */
     #cameraScannerModal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; }
     #videoContainer { position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    
-    #qr-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    #qr-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; } /* Chặn hoàn toàn tương tác bấm nhầm */
     
     .scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; background: rgba(0,0,0,0.5); }
     .scan-frame { width: 250px; height: 250px; border: 2px solid #10b981; border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6); pointer-events: none; }
@@ -270,10 +267,10 @@
 
 <input type="file" id="nativeImageInput" accept="image/*" multiple style="display: none;" onchange="processImagesLocally(event)">
 
+<!-- VÙNG CAMERA QUÉT QR -->
 <div id="cameraScannerModal">
-  <div class="cam-instruction">Đưa thẻ CCCD vào trong khung ngắm</div>
+  <div class="cam-instruction">Hãy cầm thẻ CCCD cách xa 15-20cm để lấy nét</div>
   <div id="videoContainer">
-    <!-- CẬP NHẬT: Thẻ video an toàn tuyệt đối cho iOS -->
     <video id="qr-video" autoplay muted playsinline webkit-playsinline></video>
     <canvas id="qr-canvas" hidden></canvas>
     <div class="scan-overlay"><div class="scan-frame"></div></div>
@@ -281,6 +278,7 @@
   <button class="btn-close-cam" onclick="stopScanner()">Đóng Camera</button>
 </div>
 
+<!-- MODALS THÔNG BÁO VÀ CHỈNH SỬA -->
 <div class="modal-overlay" id="manualModal">
   <div class="modal-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -336,14 +334,15 @@
     <div class="success-check-icon">✓</div>
     <h3 style="margin: 0 0 8px 0; color: var(--primary-dark); font-size: 18px; font-weight: 800;">Tạo Tờ Khai Thành Công!</h3>
     <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Hồ sơ của bạn đã được khởi tạo và sẵn sàng tải về.</p>
-    <!-- CẬP NHẬT: Loại bỏ hoàn toàn thuộc tính tải ép (download attribute) để iOS mở bằng trình duyệt nội bộ -->
     <a id="downloadFileBtn" href="#" target="_blank" class="btn-download-pdf" style="margin-top: 0;"><span>📥</span> Bấm để xem và tải PDF</a>
     <div style="margin-top: 16px;"><button onclick="closeDownloadModal()" style="background: none; border: none; color: #64748b; font-size: 14px; cursor: pointer; text-decoration: underline; font-weight: 600;">Đóng</button></div>
   </div>
 </div>
 
 <script>
-  // ĐƯỜNG LINK GOOGLE APPS SCRIPT CỦA BẠN (GIỮ NGUYÊN)
+  // =========================================================================
+  // LINK API WEB APP CỦA BẠN (GIỮ NGUYÊN)
+  // =========================================================================
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyebgbDW3pPLAK-qPoz6_v_KC5P5dPLWjorgEvj9QXDIYpgNuG6kBog3vs5jTWqxQns6g/exec";
 
   const officialPhuongList = [
@@ -360,7 +359,13 @@
   let scanning = false; 
   let camStream = null;
 
-  // CẬP NHẬT: Hàm ép lấy nét tự động (AutoFocus) và độ phân giải cao cho iOS
+  // Hỗ trợ lõi quét mã gốc của trình duyệt (Nếu có)
+  let nativeBarcodeDetector = null;
+  if ('BarcodeDetector' in window) {
+    nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+  }
+
+  // KHỞI TẠO CAMERA: CÓ ÉP ZOOM CHO IPHONE
   function startScanner(target) {
     activeTarget = target;
     document.getElementById("cameraScannerModal").style.display = "flex";
@@ -368,90 +373,108 @@
     video.setAttribute('autoplay', '');
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
     
-    // Cấu hình ép iPhone dùng độ phân giải cao để kích hoạt ống kính chính (có Auto-focus)
-    const cameraConstraints = {
-      video: {
-        facingMode: "environment",
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        advanced: [{ focusMode: "continuous" }]
-      }
-    };
-    
-    navigator.mediaDevices.getUserMedia(cameraConstraints).then(function(stream) {
+    // Yêu cầu khung hình 1080p
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
+    }).then(function(stream) {
       camStream = stream; 
       scanning = true;
       video.srcObject = stream;
+      
+      // Khởi động Zoom 2.5x
+      setTimeout(() => {
+        try {
+          const track = stream.getVideoTracks()[0];
+          const capabilities = track.getCapabilities();
+          if (capabilities && capabilities.zoom) {
+            const zoomVal = Math.min(capabilities.zoom.max, 2.5);
+            track.applyConstraints({ advanced: [{ zoom: zoomVal }] });
+          }
+        } catch(e) { }
+      }, 600);
+
       video.play();
       requestAnimationFrame(tick);
     }).catch(err => {
-      // Dùng cấu hình thường nếu lỗi (Fallback)
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(fallbackStream) {
-        camStream = fallbackStream;
-        scanning = true;
-        video.srcObject = fallbackStream;
-        video.play();
-        requestAnimationFrame(tick);
-      }).catch(fallbackErr => {
-        alert("Lỗi Camera: Hãy đảm bảo bạn cho phép trình duyệt dùng camera.");
-        document.getElementById("cameraScannerModal").style.display = "none";
-      });
+      alert("Lỗi Camera: Hãy đảm bảo bạn cho phép trình duyệt dùng camera.");
+      document.getElementById("cameraScannerModal").style.display = "none";
     });
   }
 
-  function tick() {
+  // QUÉT MÃ QR BẰNG THUẬT TOÁN KÉP (NATIVE VÀ CROP JSQR)
+  async function tick() {
     if (!scanning) return;
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
       canvasElement.height = video.videoHeight;
       canvasElement.width = video.videoWidth;
       qrCanvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-      var imageData = qrCanvasCtx.getImageData(0, 0, canvasElement.width, canvasElement.height);
       
-      // CẬP NHẬT: Tăng độ nhạy đảo màu (attemptBoth) giúp nhận diện trong ánh sáng chói
-      var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
-      
-      if (code && code.data) {
-        let p = parseCCCD(code.data);
+      let codeData = null;
+
+      // 1. Quét bằng Native
+      if (nativeBarcodeDetector) {
+        try {
+          const barcodes = await nativeBarcodeDetector.detect(canvasElement);
+          if (barcodes && barcodes.length > 0) codeData = barcodes[0].rawValue;
+        } catch (e) {}
+      }
+
+      // 2. Nếu thất bại, quét bằng JS (Thu hẹp khung hình chỉ lấy trung tâm)
+      if (!codeData) {
+        let cropWidth = Math.floor(canvasElement.width * 0.6);
+        let cropHeight = Math.floor(canvasElement.height * 0.6);
+        let cropX = Math.floor((canvasElement.width - cropWidth) / 2);
+        let cropY = Math.floor((canvasElement.height - cropHeight) / 2);
+        var imageData = qrCanvasCtx.getImageData(cropX, cropY, cropWidth, cropHeight);
+        var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+        if (code) codeData = code.data;
+      }
+
+      // Xử lý nếu thành công
+      if (codeData) {
+        let p = parseCCCD(codeData);
         if (p) {
-          stopScanner(); // Tắt camera
+          stopScanner(); // Tắt ngay camera
           setTimeout(() => {
             if (navigator.vibrate) navigator.vibrate(200);
             addPerson(p, activeTarget);
-            
             const arr = activeTarget === 'seller' ? sellers : buyers;
             const lastIdx = arr.length - 1;
-            if (isDateBefore01072026(p.ngayCap)) {
-              showQrDateWarning(activeTarget, lastIdx);
-            } else if (hasMojibake(p.hoTen) || hasMojibake(p.diaChi)) {
-              showEncodingWarning(activeTarget, lastIdx);
-            }
+            if (isDateBefore01072026(p.ngayCap)) { showQrDateWarning(activeTarget, lastIdx); } 
+            else if (hasMojibake(p.hoTen) || hasMojibake(p.diaChi)) { showEncodingWarning(activeTarget, lastIdx); }
           }, 150);
-          return;
+          return; 
         }
       }
     }
     if (scanning) requestAnimationFrame(tick);
   }
 
-  // CẬP NHẬT: Hàm ngắt camera triệt để, dọn dẹp bộ nhớ chống lỗi Safari
+  // ÉP TẮT CAMERA TUYỆT ĐỐI CHỐNG LỖI MÀN HÌNH ĐEN IPHONE
   function stopScanner() {
     scanning = false;
-    
     if (video) {
       video.pause();
       video.srcObject = null;
       video.removeAttribute('src');
     }
-
     if (camStream) {
       camStream.getTracks().forEach(track => track.stop());
       camStream = null;
     }
-    
     document.getElementById("cameraScannerModal").style.display = "none";
+    
+    // Reflow chống kẹt giao diện Safari
+    document.body.style.display = "none";
+    document.body.offsetHeight; 
+    document.body.style.display = ""; 
   }
 
+  // =========================================================================
+  // PHẦN CHỨC NĂNG GIAO DIỆN & XỬ LÝ SỰ KIỆN (ĐƯỢC GIỮ NGUYÊN)
+  // =========================================================================
   function showPhuongList() { renderPhuongSuggestions(officialPhuongList); }
   function togglePhuongDropdown(event) {
     event.stopPropagation();
