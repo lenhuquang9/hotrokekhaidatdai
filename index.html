@@ -3,7 +3,6 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <!-- THÊM: Bổ sung các thẻ chặn zoom và tối ưu viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Hỗ Trợ Kê Khai Đơn & Tờ Khai Thuế - VP ĐKĐĐ Biên Hòa – Thành phố Đồng Nai</title>
@@ -16,7 +15,6 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
   <style>
-    /* CSS Chung (Giữ Nguyên) */
     :root {
       --primary: #059669; --primary-dark: #064e3b; --primary-light: #ecfdf5;
       --accent: #2563eb; --danger: #ef4444; --error-bg: #fff1f2; --error-border: #f43f5e;
@@ -52,7 +50,6 @@
     
     .form-control { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); font-size: 15px; font-family: inherit; color: var(--text-main); background: #f8fafc; transition: all 0.2s ease; }
     .form-control:focus { outline: none; background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15); }
-    
     .form-control.has-error { background-color: var(--error-bg); border-color: var(--error-border); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15); }
     .error-msg { font-size: 11px; font-weight: 700; color: var(--danger); margin-top: 4px; display: none; }
     .field-group.error .error-msg { display: block; }
@@ -123,11 +120,10 @@
     .success-check-icon { width: 68px; height: 68px; background: #ecfdf5; border: 3px solid #10b981; border-radius: 50%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 34px; color: #10b981; animation: scaleUp 0.35s ease-in-out; }
     @keyframes scaleUp { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-    /* CSS CSS MỚI CHO QUÉT CAMERA */
+    /* CSS CSS MỚI CHO QUÉT CAMERA: ÉP KHÔNG NHẬN TƯƠNG TÁC ĐỂ TRÁNH MỞ FULL MÀN HÌNH */
     #cameraScannerModal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; }
     #videoContainer { position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
     
-    /* Ép thẻ video không nhận tương tác, tránh iOS bung toàn màn hình */
     #qr-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     
     .scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; background: rgba(0,0,0,0.5); }
@@ -274,11 +270,10 @@
 
 <input type="file" id="nativeImageInput" accept="image/*" multiple style="display: none;" onchange="processImagesLocally(event)">
 
-<!-- VÙNG CAMERA QUÉT QR (ĐÃ KHÓA HOÀN TOÀN MÀN HÌNH NATIVE IOS) -->
 <div id="cameraScannerModal">
   <div class="cam-instruction">Đưa thẻ CCCD vào trong khung ngắm</div>
   <div id="videoContainer">
-    <!-- ĐÃ CẬP NHẬT BẢO MẬT: autoplays, muted, playsinline cực mạnh -->
+    <!-- CẬP NHẬT: Thẻ video an toàn tuyệt đối cho iOS -->
     <video id="qr-video" autoplay muted playsinline webkit-playsinline></video>
     <canvas id="qr-canvas" hidden></canvas>
     <div class="scan-overlay"><div class="scan-frame"></div></div>
@@ -341,14 +336,14 @@
     <div class="success-check-icon">✓</div>
     <h3 style="margin: 0 0 8px 0; color: var(--primary-dark); font-size: 18px; font-weight: 800;">Tạo Tờ Khai Thành Công!</h3>
     <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Hồ sơ của bạn đã được khởi tạo và sẵn sàng tải về.</p>
-    <!-- ĐÃ XÓA CHỮ "DOWNLOAD" MỘT LẦN NỮA -->
+    <!-- CẬP NHẬT: Loại bỏ hoàn toàn thuộc tính tải ép (download attribute) để iOS mở bằng trình duyệt nội bộ -->
     <a id="downloadFileBtn" href="#" target="_blank" class="btn-download-pdf" style="margin-top: 0;"><span>📥</span> Bấm để xem và tải PDF</a>
     <div style="margin-top: 16px;"><button onclick="closeDownloadModal()" style="background: none; border: none; color: #64748b; font-size: 14px; cursor: pointer; text-decoration: underline; font-weight: 600;">Đóng</button></div>
   </div>
 </div>
 
 <script>
-  // DÁN LINK API WEB APP (CODE.GS) MỚI NHẤT CỦA BẠN VÀO ĐÂY
+  // ĐƯỜNG LINK GOOGLE APPS SCRIPT CỦA BẠN (GIỮ NGUYÊN)
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyebgbDW3pPLAK-qPoz6_v_KC5P5dPLWjorgEvj9QXDIYpgNuG6kBog3vs5jTWqxQns6g/exec";
 
   const officialPhuongList = [
@@ -365,25 +360,43 @@
   let scanning = false; 
   let camStream = null;
 
-  // HÀM KHỞI TẠO CAMERA MỚI: ÉP BUỘC IOS PHÁT INLINE
+  // CẬP NHẬT: Hàm ép lấy nét tự động (AutoFocus) và độ phân giải cao cho iOS
   function startScanner(target) {
     activeTarget = target;
     document.getElementById("cameraScannerModal").style.display = "flex";
     
-    // Yêu cầu video phát dạng câm và trong dòng bằng javascript
     video.setAttribute('autoplay', '');
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
     
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+    // Cấu hình ép iPhone dùng độ phân giải cao để kích hoạt ống kính chính (có Auto-focus)
+    const cameraConstraints = {
+      video: {
+        facingMode: "environment",
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        advanced: [{ focusMode: "continuous" }]
+      }
+    };
+    
+    navigator.mediaDevices.getUserMedia(cameraConstraints).then(function(stream) {
       camStream = stream; 
       scanning = true;
       video.srcObject = stream;
       video.play();
       requestAnimationFrame(tick);
     }).catch(err => {
-      alert("Lỗi Camera: Hãy đảm bảo bạn cho phép trình duyệt dùng camera.");
-      document.getElementById("cameraScannerModal").style.display = "none";
+      // Dùng cấu hình thường nếu lỗi (Fallback)
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(fallbackStream) {
+        camStream = fallbackStream;
+        scanning = true;
+        video.srcObject = fallbackStream;
+        video.play();
+        requestAnimationFrame(tick);
+      }).catch(fallbackErr => {
+        alert("Lỗi Camera: Hãy đảm bảo bạn cho phép trình duyệt dùng camera.");
+        document.getElementById("cameraScannerModal").style.display = "none";
+      });
     });
   }
 
@@ -394,7 +407,9 @@
       canvasElement.width = video.videoWidth;
       qrCanvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
       var imageData = qrCanvasCtx.getImageData(0, 0, canvasElement.width, canvasElement.height);
-      var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+      
+      // CẬP NHẬT: Tăng độ nhạy đảo màu (attemptBoth) giúp nhận diện trong ánh sáng chói
+      var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
       
       if (code && code.data) {
         let p = parseCCCD(code.data);
@@ -419,26 +434,22 @@
     if (scanning) requestAnimationFrame(tick);
   }
 
-  // HÀM ÉP TẮT CAMERA CỰC KỲ MẠNH DÀNH RIÊNG CHO IPHONE
+  // CẬP NHẬT: Hàm ngắt camera triệt để, dọn dẹp bộ nhớ chống lỗi Safari
   function stopScanner() {
     scanning = false;
     
-    // 1. Dừng trình phát video của Safari ngay lập tức
     if (video) {
       video.pause();
       video.srcObject = null;
       video.removeAttribute('src');
     }
 
-    // 2. Ngắt kết nối phần cứng camera
     if (camStream) {
       camStream.getTracks().forEach(track => track.stop());
       camStream = null;
     }
     
-    // 3. Ẩn giao diện
-    let modal = document.getElementById("cameraScannerModal");
-    modal.style.display = "none";
+    document.getElementById("cameraScannerModal").style.display = "none";
   }
 
   function showPhuongList() { renderPhuongSuggestions(officialPhuongList); }
