@@ -1,850 +1,306 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Hỗ Trợ Kê Khai Đơn & Tờ Khai Thuế - VP ĐKĐĐ Biên Hòa – Thành phố Đồng Nai</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+// =====================================================================
+// CẤU HÌNH THƯ MỤC VÀ 4 FILE MẪU CHUẨN
+// =====================================================================
+const TARGET_FOLDER_ID = '1M3xz_08Tt1Ozjo48eFgFM6NKY_CEVSxO';
 
-  <style>
-    :root {
-      --primary: #059669; --primary-dark: #064e3b; --primary-light: #ecfdf5;
-      --accent: #2563eb; --danger: #ef4444; --error-bg: #fff1f2; --error-border: #f43f5e;
-      --warning-bg: #fffbeb; --warning-border: #fde68a; --warning-text: #92400e;
-      --text-main: #0f172a; --text-muted: #64748b;
-      --bg-page: #f8fafc; --card-bg: #ffffff; --border: #e2e8f0;
-      --radius-lg: 16px; --radius-md: 10px;
-    }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 260px, #f1f5f9 100%); margin: 0; padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 12px) calc(env(safe-area-inset-bottom, 16px) + 60px) env(safe-area-inset-left, 12px); color: var(--text-main); min-height: 100vh; }
-    .container { max-width: 880px; margin: 0 auto; }
-    .header-box { text-align: center; padding: 24px 16px 18px; margin-bottom: 20px; }
-    .org-badge { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 18px; background: rgba(5, 150, 105, 0.08); border: 1px solid rgba(5, 150, 105, 0.2); border-radius: 14px; margin-bottom: 14px; }
-    .org-title { font-size: 13px; font-weight: 800; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
-    .org-meta { display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
-    .org-meta .since-text { font-size: 11px; font-weight: 600; color: #047857; }
-    .credit-box { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #a7f3d0; border-radius: 20px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15); }
-    .credit-box .credit-prefix { font-size: 12px; font-weight: 600; color: #064e3b; }
-    .credit-box .credit-name { font-size: 13px; font-weight: 900; color: #dc2626; text-transform: uppercase; }
-    .header-title { font-size: 21px; font-weight: 800; color: #064e3b; line-height: 1.35; margin: 0 0 6px 0; text-transform: uppercase; }
-    @media (min-width: 640px) { .header-title { font-size: 26px; } }
-    .header-desc { color: var(--text-muted); font-size: 13px; margin: 0; font-weight: 500; }
+const TEMPLATE_TANG_CHO_THUA_KE_ID = '1_vd8UMH6fsMkxxfKKu_ZgctGcHRhRInwa7jpdk1fLqc';
+const TEMPLATE_CHUYEN_NHUONG_ID = '1s6lk0-L6hNtXGY53XNNIVPaqngm88xB8ymHCXD-C2II';
+const TEMPLATE_CAP_DOI_ID = '1TK-z1YX-P8SZfaTgN4zW_njlUpI1ZWVNARLons5H_cQ';
+const TEMPLATE_TAI_SAN_ID = '1obuJ7FN7xMGnc_QQm3DuG01xV_BnU4DxvpiYORliZ8w';
+
+function extractDocId(input) {
+  if (!input) return '';
+  const match = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : input.trim();
+}
+
+function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    var fileUrl = processDocumentGeneration(payload);
     
-    .card { background: var(--card-bg); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); }
-    .card-head { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); }
-    .card-step { width: 28px; height: 28px; background: var(--primary-light); color: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-    .card-title { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0; text-align: left; }
-    
-    .warning-box { background: var(--warning-bg); border: 1.5px solid var(--warning-border); color: var(--warning-text); padding: 10px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; line-height: 1.45; }
-    
-    label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-    .required-star { color: var(--danger); font-weight: 800; margin-left: 2px; }
-    
-    .form-control { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: var(--radius-md); font-size: 15px; font-family: inherit; color: var(--text-main); background: #f8fafc; transition: all 0.2s ease; }
-    .form-control:focus { outline: none; background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15); }
-    .form-control.has-error { background-color: var(--error-bg); border-color: var(--error-border); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15); }
-    .error-msg { font-size: 11px; font-weight: 700; color: var(--danger); margin-top: 4px; display: none; }
-    .field-group.error .error-msg { display: block; }
-
-    select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; padding-right: 40px; font-weight: 600; cursor: pointer; }
-    
-    .autocomplete-wrap { position: relative; }
-    .dropdown-toggle-btn { position: absolute; right: 2px; top: 2px; bottom: 2px; width: 42px; background: #f1f5f9; border: none; border-radius: 0 8px 8px 0; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: background 0.2s; }
-    .dropdown-toggle-btn:hover { background: #e2e8f0; color: var(--primary-dark); }
-    .suggestions-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1.5px solid var(--primary); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; max-height: 200px; overflow-y: auto; margin-top: 2px; }
-    .suggestion-item { padding: 10px 14px; font-size: 14px; font-weight: 600; color: #334155; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-    .suggestion-item:hover { background: var(--primary-light); color: var(--primary-dark); }
-
-    .grid-fields-custom { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .grid-fields-custom > div:nth-child(4), .grid-fields-custom > div:nth-child(5) { grid-column: span 1.5; }
-    @media (max-width: 768px) {
-      .grid-fields-custom { grid-template-columns: 1fr 1fr; }
-      .grid-fields-custom > div:nth-child(3) { grid-column: span 2; }
-      .grid-fields-custom > div:nth-child(4), .grid-fields-custom > div:nth-child(5) { grid-column: span 1; }
-    }
-    @media (max-width: 480px) {
-      .grid-fields-custom { grid-template-columns: 1fr; }
-      .grid-fields-custom > div { grid-column: span 1 !important; }
-    }
-
-    .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
-    .parties-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-    @media (min-width: 768px) { .parties-grid { grid-template-columns: 1fr 1fr; } }
-    .party-panel { background: #fafafa; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; }
-    .party-badge-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-    .badge-seller { color: #dc2626; } .badge-buyer { color: #0284c7; }
-    
-    .action-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .btn-act { border: none; padding: 10px 4px; border-radius: var(--radius-md); font-size: 12px; font-weight: 700; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: all 0.2s; white-space: nowrap; width: 100%; }
-    .btn-act:active { transform: scale(0.97); }
-    .btn-qr-scan { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2); }
-    .btn-qr-capture { background: #e2e8f0; color: #1e293b; }
-    .btn-manual-input { background: #ffffff; color: #334155; border: 1.5px solid #cbd5e1; }
-    
-    .person-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-    .person-empty { padding: 20px 12px; text-align: center; color: #94a3b8; font-size: 13px; border: 1.5px dashed #e2e8f0; border-radius: var(--radius-md); }
-    .person-tag { background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); border-radius: 8px; padding: 10px 12px; position: relative; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03); }
-    .person-tag-name { font-weight: 700; font-size: 14px; color: #0f172a; padding-right: 65px; }
-    .person-tag-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
-    .person-tag-sub .addr-highlight { color: var(--danger); font-weight: 700; }
-    
-    .tag-actions { position: absolute; right: 8px; top: 8px; display: flex; gap: 4px; }
-    .btn-tag-action { width: 26px; height: 26px; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; }
-    .btn-edit-person { background: #f1f5f9; color: #0284c7; }
-    .btn-del-person { background: #fef2f2; color: var(--danger); font-size: 16px; }
-    
-    .submit-bar { margin-top: 24px; text-align: center; }
-    .btn-submit { width: 100%; max-width: 440px; padding: 16px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35); transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(16, 185, 129, 0.45); }
-    .btn-submit:active { transform: translateY(0); }
-    .submit-note { font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 600; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.4; }
-    
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 16px; overflow-y: auto; }
-    .modal-card { background: #ffffff; border-radius: 20px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); max-height: 85vh; overflow-y: auto; margin: auto; }
-    
-    #loading-indicator { display: none; position: fixed; inset: 0; background: rgba(255, 255, 255, 0.94); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
-    .circular-spinner { width: 52px; height: 52px; border: 4px solid #d1fae5; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.85s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .btn-download-pdf { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: var(--accent); color: white !important; padding: 15px 24px; border-radius: 12px; font-weight: 700; font-size: 15px; width: 100%; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); margin-top: 10px; }
-    .success-check-icon { width: 68px; height: 68px; background: #ecfdf5; border: 3px solid #10b981; border-radius: 50%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 34px; color: #10b981; animation: scaleUp 0.35s ease-in-out; }
-    @keyframes scaleUp { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-
-    /* CSS ĐẶC BIỆT CHỐNG LỖI MÀN HÌNH ĐEN TRÊN IPHONE SAFARI */
-    #cameraScannerModal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; }
-    #videoContainer { position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    #qr-video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; } /* Chặn hoàn toàn tương tác bấm nhầm */
-    
-    .scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; background: rgba(0,0,0,0.5); }
-    .scan-frame { width: 250px; height: 250px; border: 2px solid #10b981; border-radius: 16px; position: relative; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6); pointer-events: none; }
-    .scan-frame::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: #ef4444; animation: scanline 2s linear infinite; }
-    @keyframes scanline { 0% { transform: translateY(0); } 100% { transform: translateY(250px); } }
-    .btn-close-cam { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 14px 30px; background: #ef4444; color: white; border: none; border-radius: 30px; font-size: 15px; font-weight: 700; z-index: 10001; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    .cam-instruction { position: absolute; top: 50px; left: 0; right: 0; text-align: center; color: white; font-weight: 700; font-size: 16px; z-index: 10001; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-  </style>
-</head>
-<body>
-
-<div id="loading-indicator">
-  <div class="circular-spinner"></div>
-  <div id="loading-text" style="font-weight: 700; color: #064e3b; font-size: 16px;">Đang thực hiện</div>
-</div>
-
-<div class="container">
-  <div class="header-box">
-    <div class="org-badge">
-      <div class="org-title">Văn phòng Đăng ký đất đai chi nhánh Biên Hòa – Thành phố Đồng Nai</div>
-      <div class="org-meta"><span class="since-text">Since 01/10/2026</span>
-        <div class="credit-box"><span class="credit-prefix">Được sáng lập và phát triển bởi</span><span class="credit-name">Lê Như Quang</span></div>
-      </div>
-    </div>
-    <h1 class="header-title">Hỗ Trợ Kê Khai Đơn, Tờ Khai Thuế<br>Trong Lĩnh Vực Biến Động Đất Đai</h1>
-    <p class="header-desc">Đơn giản hoá mọi vấn đề, việc chuẩn bị hồ sơ này thật dễ dàng !</p>
-  </div>
-  
-  <div class="card">
-    <div class="card-head">
-      <div class="card-step">1</div><h2 class="card-title">Loại Hình Biến Động</h2>
-    </div>
-    <select id="loaiBienDong" class="form-control" onchange="onLoaiBienDongChange()">
-      <option value="Chuyển nhượng quyền sử dụng đất và tài sản gắn liền với đất">Chuyển nhượng quyền sử dụng đất (Mua bán)</option>
-      <option value="Tặng cho quyền sử dụng đất và tài sản gắn liền với đất">Tặng cho quyền sử dụng đất</option>
-      <option value="Thừa kế quyền sử dụng đất và tài sản gắn liền với đất">Thừa kế quyền sử dụng đất</option>
-      <option value="Cấp đổi Giấy chứng nhận quyền sử dụng đất">Cấp đổi Giấy chứng nhận (Mẫu số 28)</option>
-      <option value="Đăng ký cấp tài sản (Nhà ở)">Đăng ký cấp tài sản (Nhà ở) (Mẫu 28 + Tờ khai LPTB)</option>
-      <option value="Thỏa thuận tài sản chung vợ chồng">Thoả thuận tài sản chung vợ chồng</option>
-      <option value="Cấp giấy theo Quyết định của Tòa án">Cấp giấy theo Quyết định của Tòa án</option>
-    </select>
-  </div>
-
-  <div class="card" id="cardThuaDat">
-    <div class="card-head">
-      <div class="card-step">2</div><h2 class="card-title">Thông Tin Thửa Đất & Số Điện Thoại</h2>
-    </div>
-    <div class="grid-fields-custom" id="gridThuaDatFields">
-      <div class="field-group" id="group-soThua">
-        <label>Số thửa đất <span class="required-star">*</span></label>
-        <input type="tel" inputmode="numeric" id="soThua" class="form-control" placeholder="VD: 125" maxlength="4" oninput="validateNumberOnly(this); clearError('soThua')">
-        <div class="error-msg">Vui lòng nhập số thửa đất</div>
-      </div>
-      
-      <div class="field-group" id="group-soTo">
-        <label>Số tờ bản đồ <span class="required-star">*</span></label>
-        <input type="tel" inputmode="numeric" id="soTo" class="form-control" placeholder="VD: 45" maxlength="3" oninput="validateNumberOnly(this); clearError('soTo')">
-        <div class="error-msg">Vui lòng nhập số tờ bản đồ</div>
-      </div>
-      
-      <div class="field-group" id="group-phuong" style="position: relative;">
-        <label>Phường / Xã <span class="required-star">*</span></label>
-        <div class="autocomplete-wrap">
-          <input type="text" id="phuong" class="form-control" placeholder="Chọn hoặc nhập phường..." autocomplete="off" oninput="filterPhuong(this.value); clearError('phuong')" onfocus="showPhuongList()" style="padding-right: 44px;">
-          <button type="button" class="dropdown-toggle-btn" onclick="togglePhuongDropdown(event)" title="Chọn danh sách phường">▼</button>
-          <div id="phuongSuggestions" class="suggestions-list"></div>
-        </div>
-        <div class="error-msg">Vui lòng chọn hợp lệ</div>
-      </div>
-
-      <div class="field-group" id="group-khuPho">
-        <label>Khu phố (sau 01/07/2026) <span class="required-star">*</span></label>
-        <input type="text" id="khuPho" class="form-control" placeholder="VD: Khu phố 2" oninput="clearError('khuPho')">
-        <div class="error-msg">Vui lòng nhập khu phố</div>
-      </div>
-      
-      <div class="field-group" id="group-sdt">
-        <label>Số điện thoại liên hệ <span class="required-star">*</span></label>
-        <input type="tel" inputmode="numeric" id="sdt" class="form-control" placeholder="Đủ 10 chữ số" maxlength="10" oninput="validateNumberOnly(this); clearError('sdt')">
-        <div class="error-msg" id="sdtErrorMsg">Số điện thoại phải đủ 10 chữ số</div>
-      </div>
-    </div>
-
-    <div id="rowCapDoiSdt" style="display: none;">
-      <div class="field-group" id="group-sdtCapDoi">
-        <label>Số điện thoại liên hệ <span class="required-star">*</span></label>
-        <input type="tel" inputmode="numeric" id="sdtCapDoi" class="form-control" placeholder="Đủ 10 chữ số" maxlength="10" oninput="validateNumberOnly(this); clearError('sdtCapDoi')">
-        <div class="error-msg" id="sdtCapDoiErrorMsg">Số điện thoại phải đủ 10 chữ số</div>
-      </div>
-    </div>
-
-    <div id="rowTaiSanNhaO" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
-      <div class="grid-fields">
-        <div class="field-group" id="group-dtXayDung">
-          <label>Diện tích xây dựng (m²) <span class="required-star">*</span></label>
-          <input type="text" id="dtXayDung" class="form-control" placeholder="VD: 85.5" oninput="clearError('dtXayDung')">
-          <div class="error-msg">Vui lòng nhập diện tích xây dựng</div>
-        </div>
-        <div class="field-group" id="group-dtSan">
-          <label>Diện tích sàn xây dựng (m²) <span class="required-star">*</span></label>
-          <input type="text" id="dtSan" class="form-control" placeholder="VD: 170.2" oninput="clearError('dtSan')">
-          <div class="error-msg">Vui lòng nhập diện tích sàn</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-step">3</div><h2 class="card-title">Thông Tin Các Bên Tham Gia</h2>
-    </div>
-    <div class="warning-box">
-      <span>⚠️</span><span>Đây chỉ là công cụ hỗ trợ, đề nghị kiểm tra thông tin, chỉnh sửa chính xác trước khi xuất file.</span>
-    </div>
-    <div class="parties-grid" id="partiesWrapper">
-      <div class="party-panel" id="panelSeller">
-        <div class="party-badge-title badge-seller" id="titleSeller"><span>🏛️</span> Bên Chuyển Nhượng (Bán)</div>
-        <div class="action-row">
-          <button class="btn-act btn-qr-scan" onclick="startScanner('seller')">📷 QUÉT QR</button>
-          <button class="btn-act btn-qr-capture" onclick="triggerNativeInput('seller')">Tải CCCD</button>
-          <button class="btn-act btn-manual-input" onclick="openManualModal('seller')">➕ Nhập tay</button>
-        </div>
-        <div class="person-list" id="list-seller"></div>
-      </div>
-
-      <div class="party-panel" id="panelBuyer">
-        <div class="party-badge-title badge-buyer" id="titleBuyer"><span>📝</span> Bên Nhận Chuyển Nhượng (Mua)</div>
-        <div class="action-row">
-          <button class="btn-act btn-qr-scan" onclick="startScanner('buyer')">📷 QUÉT QR</button>
-          <button class="btn-act btn-qr-capture" onclick="triggerNativeInput('buyer')">Tải CCCD</button>
-          <button class="btn-act btn-manual-input" onclick="openManualModal('buyer')">➕ Nhập tay</button>
-        </div>
-        <div class="person-list" id="list-buyer"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="submit-bar">
-    <button id="btnSubmit" class="btn-submit" onclick="handleGenerateDocs()"><span>📑</span> Xuất tờ khai</button>
-    <div class="submit-note">Dữ liệu thông tin cá nhân của bạn là bảo mật</div>
-  </div>
-</div>
-
-<input type="file" id="nativeImageInput" accept="image/*" multiple style="display: none;" onchange="processImagesLocally(event)">
-
-<!-- VÙNG CAMERA QUÉT QR -->
-<div id="cameraScannerModal">
-  <div class="cam-instruction">Hãy cầm thẻ CCCD cách xa 15-20cm để lấy nét</div>
-  <div id="videoContainer">
-    <video id="qr-video" autoplay muted playsinline webkit-playsinline></video>
-    <canvas id="qr-canvas" hidden></canvas>
-    <div class="scan-overlay"><div class="scan-frame"></div></div>
-  </div>
-  <button class="btn-close-cam" onclick="stopScanner()">Đóng Camera</button>
-</div>
-
-<!-- MODALS THÔNG BÁO VÀ CHỈNH SỬA -->
-<div class="modal-overlay" id="manualModal">
-  <div class="modal-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 style="margin: 0; font-size: 17px; color: #0f172a;" id="manualModalTitle">Nhập Thông Tin Cá Nhân</h3>
-      <button onclick="closeManualModal()" style="border: none; background: none; font-size: 22px; color: #94a3b8; cursor: pointer;">&times;</button>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <div><label>Họ và tên *</label><input type="text" id="m_hoTen" class="form-control" placeholder="NGUYỄN VĂN A" style="text-transform: uppercase;"></div>
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-        <div><label>Số CCCD (12 số) *</label><input type="tel" inputmode="numeric" id="m_cccd" class="form-control" placeholder="075092024616" maxlength="12" oninput="validateNumberOnly(this)"></div>
-        <div id="fieldCmndWrap"><label>CMND cũ</label><input type="text" id="m_cmnd" class="form-control" placeholder="Nếu có"></div>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div><label>Ngày sinh (dd/mm/yyyy)</label><input type="tel" inputmode="numeric" id="m_ngaySinh" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="formatDateField(this)"></div>
-        <div id="fieldGioiTinhWrap"><label>Giới tính</label><select id="m_gioiTinh" class="form-control"><option value="Nam">Nam</option><option value="Nữ">Nữ</option></select></div>
-      </div>
-      <div id="fieldNgayCapWrap"><label>Ngày cấp CCCD (dd/mm/yyyy)</label><input type="tel" inputmode="numeric" id="m_ngayCap" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" oninput="formatDateField(this)"></div>
-      <div id="fieldDiaChiWrap"><label>Nơi thường trú *</label><textarea id="m_diaChi" class="form-control" rows="2" placeholder="Số nhà, đường, khu phố, phường, TP. Đồng Nai"></textarea></div>
-    </div>
-    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-      <button onclick="closeManualModal()" class="btn-act btn-manual-input" style="padding: 10px 16px; width: auto; margin-bottom: 0;">Hủy Bỏ</button>
-      <button onclick="saveManualPerson()" class="btn-act btn-qr-scan" style="padding: 10px 16px; width: auto; margin-bottom: 0;">Lưu Dữ Liệu</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="qrDateWarningModal">
-  <div class="modal-card" style="text-align: center;">
-    <div style="width: 68px; height: 68px; background: #fffbeb; border: 3px solid #f59e0b; border-radius: 50%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 32px;">⚠️</div>
-    <h3 style="margin: 0 0 8px 0; color: #92400e; font-size: 18px; font-weight: 800;">Lưu Ý Địa Giới Hành Chính!</h3>
-    <p style="color: #64748b; font-size: 14px; margin: 0 0 16px 0; line-height: 1.5;">Thẻ CCCD vừa quét được cấp trước ngày <b>01/07/2026</b>.<br>Vui lòng kiểm tra lại <b>Nơi thường trú</b> theo tên mới (Thành phố Đồng Nai).</p>
-    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-      <button onclick="closeQrDateWarning()" class="btn-act btn-manual-input" style="padding: 10px 16px; width: auto; margin-bottom: 0;">Đã Chuẩn, Bỏ Qua</button>
-      <button onclick="openEditFromWarning()" class="btn-act" style="background: #f59e0b; color: white; padding: 10px 16px; width: auto; margin-bottom: 0;">✍️ Sửa Lại</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="encodingWarningModal">
-  <div class="modal-card" style="text-align: center;">
-    <div style="width: 68px; height: 68px; background: #fef2f2; border: 3px solid #ef4444; border-radius: 50%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 32px;">🔤</div>
-    <h3 style="margin: 0 0 8px 0; color: #991b1b; font-size: 18px; font-weight: 800;">Phát Hiện Lỗi Mã Hóa!</h3>
-    <p style="color: #64748b; font-size: 14px; margin: 0 0 16px 0; line-height: 1.5;">Hệ thống nhận thấy họ tên/địa chỉ có dấu hiệu bị lỗi hiển thị. Vui lòng bấm <b>"Sửa Lại Ngay"</b>.</p>
-    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-      <button onclick="closeEncodingWarning()" class="btn-act btn-manual-input" style="padding: 10px 16px; width: auto; margin-bottom: 0;">Vẫn Giữ Nguyên</button>
-      <button onclick="openEditFromEncodingWarning()" class="btn-act" style="background: #ef4444; color: white; padding: 10px 16px; width: auto; margin-bottom: 0;">✍️ Sửa Lại</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="downloadModal">
-  <div class="modal-card" style="text-align: center; padding: 30px 20px;">
-    <div class="success-check-icon">✓</div>
-    <h3 style="margin: 0 0 8px 0; color: var(--primary-dark); font-size: 18px; font-weight: 800;">Tạo Tờ Khai Thành Công!</h3>
-    <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Hồ sơ của bạn đã được khởi tạo và sẵn sàng tải về.</p>
-    <a id="downloadFileBtn" href="#" target="_blank" class="btn-download-pdf" style="margin-top: 0;"><span>📥</span> Bấm để xem và tải PDF</a>
-    <div style="margin-top: 16px;"><button onclick="closeDownloadModal()" style="background: none; border: none; color: #64748b; font-size: 14px; cursor: pointer; text-decoration: underline; font-weight: 600;">Đóng</button></div>
-  </div>
-</div>
-
-<script>
-  // =========================================================================
-  // LINK API WEB APP CỦA BẠN (GIỮ NGUYÊN)
-  // =========================================================================
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyebgbDW3pPLAK-qPoz6_v_KC5P5dPLWjorgEvj9QXDIYpgNuG6kBog3vs5jTWqxQns6g/exec";
-
-  const officialPhuongList = [
-    "Trấn Biên", "Biên Hòa", "Tam Hiệp", "Long Bình", "Trảng Dài", 
-    "Hố Nai", "Long Hưng", "Phước Tân", "Tam Phước"
-  ];
-
-  let activeTarget = 'seller'; let editingIndex = -1;
-  let sellers = []; let buyers = [];
-
-  let video = document.getElementById("qr-video");
-  let canvasElement = document.getElementById("qr-canvas");
-  let qrCanvasCtx = canvasElement.getContext("2d", { willReadFrequently: true });
-  let scanning = false; 
-  let camStream = null;
-
-  // Hỗ trợ lõi quét mã gốc của trình duyệt (Nếu có)
-  let nativeBarcodeDetector = null;
-  if ('BarcodeDetector' in window) {
-    nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', url: fileUrl }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
+}
 
-  // KHỞI TẠO CAMERA: CÓ ÉP ZOOM CHO IPHONE
-  function startScanner(target) {
-    activeTarget = target;
-    document.getElementById("cameraScannerModal").style.display = "flex";
-    
-    video.setAttribute('autoplay', '');
-    video.setAttribute('muted', '');
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    
-    // Yêu cầu khung hình 1080p
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }
-    }).then(function(stream) {
-      camStream = stream; 
-      scanning = true;
-      video.srcObject = stream;
-      
-      // Khởi động Zoom 2.5x
-      setTimeout(() => {
-        try {
-          const track = stream.getVideoTracks()[0];
-          const capabilities = track.getCapabilities();
-          if (capabilities && capabilities.zoom) {
-            const zoomVal = Math.min(capabilities.zoom.max, 2.5);
-            track.applyConstraints({ advanced: [{ zoom: zoomVal }] });
-          }
-        } catch(e) { }
-      }, 600);
-
-      video.play();
-      requestAnimationFrame(tick);
-    }).catch(err => {
-      alert("Lỗi Camera: Hãy đảm bảo bạn cho phép trình duyệt dùng camera.");
-      document.getElementById("cameraScannerModal").style.display = "none";
-    });
-  }
-
-  // QUÉT MÃ QR BẰNG THUẬT TOÁN KÉP (NATIVE VÀ CROP JSQR)
-  async function tick() {
-    if (!scanning) return;
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvasElement.height = video.videoHeight;
-      canvasElement.width = video.videoWidth;
-      qrCanvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-      
-      let codeData = null;
-
-      // 1. Quét bằng Native
-      if (nativeBarcodeDetector) {
-        try {
-          const barcodes = await nativeBarcodeDetector.detect(canvasElement);
-          if (barcodes && barcodes.length > 0) codeData = barcodes[0].rawValue;
-        } catch (e) {}
-      }
-
-      // 2. Nếu thất bại, quét bằng JS (Thu hẹp khung hình chỉ lấy trung tâm)
-      if (!codeData) {
-        let cropWidth = Math.floor(canvasElement.width * 0.6);
-        let cropHeight = Math.floor(canvasElement.height * 0.6);
-        let cropX = Math.floor((canvasElement.width - cropWidth) / 2);
-        let cropY = Math.floor((canvasElement.height - cropHeight) / 2);
-        var imageData = qrCanvasCtx.getImageData(cropX, cropY, cropWidth, cropHeight);
-        var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
-        if (code) codeData = code.data;
-      }
-
-      // Xử lý nếu thành công
-      if (codeData) {
-        let p = parseCCCD(codeData);
-        if (p) {
-          stopScanner(); // Tắt ngay camera
-          setTimeout(() => {
-            if (navigator.vibrate) navigator.vibrate(200);
-            addPerson(p, activeTarget);
-            const arr = activeTarget === 'seller' ? sellers : buyers;
-            const lastIdx = arr.length - 1;
-            if (isDateBefore01072026(p.ngayCap)) { showQrDateWarning(activeTarget, lastIdx); } 
-            else if (hasMojibake(p.hoTen) || hasMojibake(p.diaChi)) { showEncodingWarning(activeTarget, lastIdx); }
-          }, 150);
-          return; 
-        }
-      }
-    }
-    if (scanning) requestAnimationFrame(tick);
-  }
-
-  // ÉP TẮT CAMERA TUYỆT ĐỐI CHỐNG LỖI MÀN HÌNH ĐEN IPHONE
-  function stopScanner() {
-    scanning = false;
-    if (video) {
-      video.pause();
-      video.srcObject = null;
-      video.removeAttribute('src');
-    }
-    if (camStream) {
-      camStream.getTracks().forEach(track => track.stop());
-      camStream = null;
-    }
-    document.getElementById("cameraScannerModal").style.display = "none";
-    
-    // Reflow chống kẹt giao diện Safari
-    document.body.style.display = "none";
-    document.body.offsetHeight; 
-    document.body.style.display = ""; 
-  }
-
-  // =========================================================================
-  // PHẦN CHỨC NĂNG GIAO DIỆN & XỬ LÝ SỰ KIỆN (ĐƯỢC GIỮ NGUYÊN)
-  // =========================================================================
-  function showPhuongList() { renderPhuongSuggestions(officialPhuongList); }
-  function togglePhuongDropdown(event) {
-    event.stopPropagation();
-    const listEl = document.getElementById('phuongSuggestions');
-    if (listEl.style.display === 'block') { listEl.style.display = 'none'; } 
-    else { renderPhuongSuggestions(officialPhuongList); document.getElementById('phuong').focus(); }
-  }
-  function filterPhuong(keyword) {
-    const kw = keyword.toLowerCase().trim();
-    const filtered = officialPhuongList.filter(p => p.toLowerCase().includes(kw));
-    renderPhuongSuggestions(filtered);
-  }
-  function renderPhuongSuggestions(items) {
-    const listEl = document.getElementById('phuongSuggestions');
-    if (items.length === 0) { listEl.style.display = 'none'; return; }
-    listEl.innerHTML = items.map(item => `<div class="suggestion-item" onclick="selectPhuong('${item}')">${item}</div>`).join('');
-    listEl.style.display = 'block';
-  }
-  function selectPhuong(name) {
-    document.getElementById('phuong').value = name;
-    document.getElementById('phuongSuggestions').style.display = 'none';
-    clearError('phuong');
-  }
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.autocomplete-wrap')) {
-      const listEl = document.getElementById('phuongSuggestions');
-      if (listEl) listEl.style.display = 'none';
-    }
+function generateMau28Block(buyers, sdt) {
+  if (!buyers || buyers.length === 0) return "";
+  let lines = [];
+  buyers.forEach((b, idx) => {
+    const prefix = buyers.length > 1 ? `Người thứ ${idx + 1}:\n` : "";
+    lines.push(`${prefix}a.1) Tên: ${b.hoTen}     Ngày/tháng/năm sinh: ${b.ngaySinh}\na.2) CC/CCCD: ${b.cccd}     Ngày cấp: ${b.ngayCap}\na.3) Địa chỉ: ${b.diaChi}`);
   });
+  lines.push(`c) Điện thoại liên hệ (nếu có): ${sdt || ''}`);
+  return lines.join('\n\n');
+}
 
-  function clearError(fieldId) {
-    const group = document.getElementById(`group-${fieldId}`);
-    const input = document.getElementById(fieldId);
-    if (group) group.classList.remove('error');
-    if (input) input.classList.remove('has-error');
-  }
-  function setError(fieldId, customMsg = '') {
-    const group = document.getElementById(`group-${fieldId}`);
-    const input = document.getElementById(fieldId);
-    if (group) group.classList.add('error');
-    if (input) input.classList.add('has-error');
-    if (customMsg && (fieldId === 'sdt' || fieldId === 'sdtCapDoi')) {
-      const msgEl = group.querySelector('.error-msg');
-      if (msgEl) msgEl.innerText = customMsg;
-    }
-  }
-
-  function validateSection2() {
-    const loai = document.getElementById('loaiBienDong').value;
-    const isCapDoi = loai.includes("Cấp đổi");
-    const isDangKyTaiSan = loai.includes("Đăng ký cấp tài sản");
-    let isValid = true;
-    if (isCapDoi) {
-      const sdtCapDoi = document.getElementById('sdtCapDoi').value.trim();
-      if (!sdtCapDoi) { setError('sdtCapDoi', 'Vui lòng nhập số điện thoại'); isValid = false; } 
-      else if (sdtCapDoi.length !== 10 || !/^\d{10}$/.test(sdtCapDoi)) { setError('sdtCapDoi', 'Số điện thoại phải đạt đúng 10 chữ số'); isValid = false; }
-    } else {
-      const soThua = document.getElementById('soThua').value.trim();
-      const soTo = document.getElementById('soTo').value.trim();
-      const phuong = document.getElementById('phuong').value.trim();
-      const khuPho = document.getElementById('khuPho').value.trim();
-      if (!soThua) { setError('soThua'); isValid = false; }
-      if (!soTo) { setError('soTo'); isValid = false; }
-      if (!phuong) { setError('phuong'); isValid = false; }
-      if (!khuPho) { setError('khuPho'); isValid = false; }
-      if (isDangKyTaiSan) {
-        const dtXay = document.getElementById('dtXayDung').value.trim();
-        const dtSan = document.getElementById('dtSan').value.trim();
-        if (!dtXay) { setError('dtXayDung'); isValid = false; }
-        if (!dtSan) { setError('dtSan'); isValid = false; }
-      }
-      const sdt = document.getElementById('sdt').value.trim();
-      if (!sdt) { setError('sdt', 'Vui lòng nhập số điện thoại'); isValid = false; } 
-      else if (sdt.length !== 10 || !/^\d{10}$/.test(sdt)) { setError('sdt', 'Số điện thoại phải đạt đúng 10 chữ số'); isValid = false; }
-    }
-    return isValid;
-  }
-
-  function triggerNativeInput(target) {
-    activeTarget = target;
-    const inp = document.getElementById('nativeImageInput');
-    inp.value = ''; inp.click();
-  }
-
-  async function processImagesLocally(event) {
-    const files = Array.from(event.target.files);
-    if (!files || files.length === 0) return;
-    const loader = document.getElementById('loading-indicator');
-    const loaderText = document.getElementById('loading-text');
-    loader.style.display = 'flex';
-    let successCount = 0; let failCount = 0;
-    const total = files.length;
-    for (let i = 0; i < total; i++) {
-      loaderText.innerText = total > 1 ? `Đang xử lý ảnh ${i + 1}/${total}...` : 'Đang thực hiện';
-      try {
-        const text = await scanSingleFile(files[i]);
-        if (text) {
-          const p = parseCCCD(text);
-          if (p) {
-            addPerson(p, activeTarget);
-            successCount++;
-            const arr = activeTarget === 'seller' ? sellers : buyers;
-            const lastIdx = arr.length - 1;
-            if (isDateBefore01072026(p.ngayCap)) { showQrDateWarning(activeTarget, lastIdx); } 
-            else if (hasMojibake(p.hoTen) || hasMojibake(p.diaChi)) { showEncodingWarning(activeTarget, lastIdx); }
-          } else { failCount++; }
-        } else { failCount++; }
-      } catch (err) { failCount++; }
-    }
-    loader.style.display = 'none'; loaderText.innerText = 'Đang thực hiện';
-    if (failCount > 0 && successCount === 0) {
-      alert("Không nhận diện được mã QR trên ảnh.");
-    }
-  }
-
-  function readFileAsImage(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = e => { const img = new Image(); img.onerror = reject; img.onload = () => resolve(img); img.src = e.target.result; };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function scanSingleFile(file) {
-    const img = await readFileAsImage(file);
-    let maxDim = 2000; let w = img.width; let h = img.height;
-    if (w > maxDim || h > maxDim) {
-      if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
-      else { w = Math.round((w * maxDim) / h); h = maxDim; }
-    }
-    const baseCanvas = document.createElement('canvas'); baseCanvas.width = w; baseCanvas.height = h;
-    const baseCtx = baseCanvas.getContext('2d', { willReadFrequently: true }); baseCtx.drawImage(img, 0, 0, w, h);
-    let res = await tryDecodeCanvas(baseCanvas);
-    if (res) return res;
-    const cropCanvas = document.createElement('canvas');
-    let cropW = Math.round(w * 0.55); let cropH = Math.round(h * 0.60);
-    cropCanvas.width = cropW; cropCanvas.height = cropH;
-    const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
-    cropCtx.drawImage(baseCanvas, w - cropW, 0, cropW, cropH, 0, 0, cropW, cropH);
-    res = await tryDecodeCanvas(cropCanvas);
-    if (res) return res;
-    applyContrastFilter(cropCtx, cropW, cropH, 75);
-    res = await tryDecodeCanvas(cropCanvas);
-    return res;
-  }
-
-  function applyContrastFilter(ctx, width, height, contrastVal) {
-    const imgData = ctx.getImageData(0, 0, width, height); const d = imgData.data;
-    const factor = (259 * (contrastVal + 255)) / (255 * (259 - contrastVal));
-    for (let i = 0; i < d.length; i += 4) {
-      const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-      let val = factor * (gray - 128) + 128;
-      if (val < 0) val = 0; if (val > 255) val = 255;
-      d[i] = val; d[i+1] = val; d[i+2] = val;
-    }
-    ctx.putImageData(imgData, 0, 0);
-  }
-
-  async function tryDecodeCanvas(canvas) {
-    if ('BarcodeDetector' in window) {
-      try { const detector = new BarcodeDetector({ formats: ['qr_code'] }); const barcodes = await detector.detect(canvas);
-        if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) return barcodes[0].rawValue;
-      } catch (e) {}
-    }
-    if (window.ZXing) {
-      try {
-        const hints = new Map(); hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE]); hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-        const source = new ZXing.HTMLCanvasElementLuminanceSource(canvas); const bitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(source));
-        const result = new ZXing.QRCodeReader().decode(bitmap, hints);
-        if (result) {
-          if (result.getRawBytes()) { try { return new TextDecoder('utf-8').decode(Uint8Array.from(result.getRawBytes())); } catch (e) {} }
-          return result.getText();
-        }
-      } catch (e) {}
-    }
-    if (typeof jsQR !== 'undefined') {
-      try {
-        const ctx = canvas.getContext('2d', { willReadFrequently: true }); const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imgData.data, canvas.width, canvas.height, { inversionAttempts: "attemptBoth" });
-        if (code) { try { return new TextDecoder('utf-8').decode(new Uint8Array(code.binaryData)); } catch (e) { return code.data; } }
-      } catch (e) {}
-    }
-    return null;
-  }
-
-  function parseCCCD(str) {
-    if (!str) return null;
-    const parts = str.split('|');
-    if (parts.length >= 7) {
-      const cccd = parts[0].trim();
-      if (!/^\d{12}$/.test(cccd)) return null;
-      const fmtDate = (d) => (d && d.length === 8) ? `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}` : d;
-      return { cccd: cccd, cmnd: parts[1].trim() || 'Không', hoTen: parts[2].trim().toUpperCase(), ngaySinh: fmtDate(parts[3].trim()), gioiTinh: parts[4].trim(), diaChi: parts[5].trim(), ngayCap: fmtDate(parts[6].trim()) };
-    }
-    return null;
-  }
-
-  function validateNumberOnly(input) { input.value = input.value.replace(/[^0-9]/g, ''); }
-  function formatDateField(input) {
-    let v = input.value.replace(/\D/g, '').slice(0, 8);
-    if (v.length >= 5) input.value = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
-    else if (v.length >= 3) input.value = `${v.slice(0, 2)}/${v.slice(2)}`;
-    else input.value = v;
-  }
-  function isDateBefore01072026(dateStr) {
-    if (!dateStr || dateStr.length !== 10) return false;
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const mm = parseInt(parts[1], 10); const yyyy = parseInt(parts[2], 10);
-      if (yyyy < 2026 || (yyyy === 2026 && mm < 7)) return true;
-    }
-    return false;
-  }
-  function hasMojibake(str) { if (!str) return false; return /Áº|Ãª|Ã |Ã£|Ã¢|Ã¤|Ã¥|Ã¦|Ã§|Ã¨|Ãé|Ãê|Ãë|Ãì|Ãí|Ãî|Ãï|Ãð|Ãñ|Ã³|Ã´|Ã¶|Ãº|Ã¹|Ã¼|Ãý/i.test(str); }
-
-  let warningTarget = ''; let warningIndex = -1;
-  function showQrDateWarning(t, idx) { warningTarget = t; warningIndex = idx; document.getElementById('qrDateWarningModal').style.display = 'flex'; }
-  function closeQrDateWarning() { document.getElementById('qrDateWarningModal').style.display = 'none'; }
+/**
+ * XỬ LÝ ĐIỀN THÔNG TIN BẢNG BIỂU:
+ * - Nhân bản dòng đối với bảng danh sách (có cột STT).
+ * - Điền 01 người đại diện tại: [04] Họ và tên, NGƯỜI NỘP THUẾ, Người viết đơn, Chữ ký,...
+ * - Điền chuỗi tên ngang (A và B) tại các vị trí liệt kê chung khác.
+ */
+function processTableRows(tables, tagKey, persons, mapPrefix) {
+  if (!persons || persons.length === 0) return;
+  const tagHoTen = `{{HO_TEN_${mapPrefix}}}`;
+  const representativeName = persons[0].hoTen;
+  const horizontalNames = persons.map(p => p.hoTen).join(' và ');
   
-  let encodeWarningTarget = ''; let encodeWarningIndex = -1;
-  function showEncodingWarning(t, idx) { encodeWarningTarget = t; encodeWarningIndex = idx; document.getElementById('encodingWarningModal').style.display = 'flex'; }
-  function closeEncodingWarning() { document.getElementById('encodingWarningModal').style.display = 'none'; }
+  for (let t = 0; t < tables.length; t++) {
+    const table = tables[t];
+    const totalRows = table.getNumRows();
+    let isListTable = false;
+    let targetRowIndex = -1;
 
-  function openEditFromWarning() { closeQrDateWarning(); editPerson(warningTarget, warningIndex); }
-  function openEditFromEncodingWarning() { closeEncodingWarning(); editPerson(encodeWarningTarget, encodeWarningIndex); }
-
-  function onLoaiBienDongChange() {
-    const val = document.getElementById('loaiBienDong').value;
-    const gridThuaDatFields = document.getElementById('gridThuaDatFields'); const rowCapDoiSdt = document.getElementById('rowCapDoiSdt');
-    const panelSeller = document.getElementById('panelSeller'); const titleSeller = document.getElementById('titleSeller');
-    const titleBuyer = document.getElementById('titleBuyer'); const wrapper = document.getElementById('partiesWrapper');
-    const rowTaiSan = document.getElementById('rowTaiSanNhaO');
+    for (let r = 0; r < totalRows; r++) {
+      const rowText = table.getRow(r).getText();
+      if (rowText.includes("STT") || rowText.includes("Số TT")) {
+        isListTable = true;
+      }
+      if (rowText.includes(tagHoTen)) {
+        const isSingleRepresentative = 
+          rowText.includes("[04]") || 
+          rowText.includes("[05]") || 
+          rowText.includes("Người viết đơn") || 
+          rowText.includes("NGƯỜI NỘP THUẾ") || 
+          rowText.includes("ĐẠI DIỆN HỢP PHÁP") || 
+          rowText.includes("Chữ ký");
+        
+        if (!isSingleRepresentative) {
+          targetRowIndex = r;
+        }
+      }
+    }
     
-    if (val.includes("Đăng ký cấp tài sản")) rowTaiSan.style.display = 'block'; else rowTaiSan.style.display = 'none';
-    
-    if (val.includes("Cấp đổi")) {
-      gridThuaDatFields.style.display = 'none'; rowCapDoiSdt.style.display = 'block'; panelSeller.style.display = 'none'; wrapper.style.gridTemplateColumns = '1fr';
-      sellers = []; renderList('list-seller', sellers, 'seller'); titleBuyer.innerHTML = `<span>📝</span> Người Đứng Đơn Cấp Đổi (Chủ Sử Dụng Đất)`;
+    if (isListTable && targetRowIndex !== -1) {
+      const templateRow = table.getRow(targetRowIndex);
+      const rowsList = [templateRow];
+      for (let p = 1; p < persons.length; p++) {
+        const newRow = templateRow.copy();
+        table.insertTableRow(targetRowIndex + p, newRow);
+        rowsList.push(newRow);
+      }
+      for (let i = 0; i < persons.length; i++) {
+        fillRowData(rowsList[i], persons[i], mapPrefix);
+        fixSttCell(rowsList[i], i + 1);
+      }
     } else {
-      gridThuaDatFields.style.display = 'grid'; rowCapDoiSdt.style.display = 'none';
-      if (val.includes("Đăng ký cấp tài sản")) {
-        panelSeller.style.display = 'none'; wrapper.style.gridTemplateColumns = '1fr'; sellers = []; renderList('list-seller', sellers, 'seller');
-        titleBuyer.innerHTML = `<span>🏠</span> Người Đứng Đơn Đăng Ký Tài Sản (Chủ Sở Hữu)`;
-      } else if (val.includes("Tặng cho") || val.includes("Thừa kế")) {
-        panelSeller.style.display = 'none'; wrapper.style.gridTemplateColumns = '1fr'; sellers = []; renderList('list-seller', sellers, 'seller');
-        titleBuyer.innerHTML = val.includes("Tặng cho") ? `<span>🎁</span> Bên Nhận Tặng Cho` : `<span>⚖️</span> Người Nhận Thừa Kế`;
-      } else if (val.includes("Thỏa thuận tài sản chung vợ chồng") || val.includes("Cấp giấy theo Quyết định của Tòa án")) {
-        panelSeller.style.display = 'flex'; wrapper.style.gridTemplateColumns = window.innerWidth > 768 ? '1fr 1fr' : '1fr';
-        titleSeller.innerHTML = `<span>🤝</span> Bên Chuyển Quyền`; titleBuyer.innerHTML = `<span>📑</span> Bên Nhận Chuyển Quyền`;
-      } else {
-        panelSeller.style.display = 'flex'; wrapper.style.gridTemplateColumns = window.innerWidth > 768 ? '1fr 1fr' : '1fr';
-        titleSeller.innerHTML = `<span>🏛️</span> Bên Chuyển Nhượng (Bán)`; titleBuyer.innerHTML = `<span>📝</span> Bên Nhận Chuyển Nhượng (Mua)`;
+      for (let r = 0; r < table.getNumRows(); r++) {
+        const row = table.getRow(r);
+        const text = row.getText();
+        if (text.includes(tagHoTen)) {
+          const isSingleRepresentative = 
+            text.includes("[04]") || 
+            text.includes("[05]") || 
+            text.includes("Họ và tên") ||
+            text.includes("Người viết đơn") || 
+            text.includes("NGƯỜI NỘP THUẾ") || 
+            text.includes("ĐẠI DIỆN HỢP PHÁP") || 
+            text.includes("Chữ ký");
+
+          if (isSingleRepresentative) {
+            row.replaceText(tagHoTen, representativeName);
+          } else {
+            row.replaceText(tagHoTen, horizontalNames);
+          }
+        }
       }
     }
   }
+}
 
-  function addPerson(person, target) {
-    if (target === 'seller') { sellers.push(person); renderList('list-seller', sellers, 'seller'); }
-    else { buyers.push(person); renderList('list-buyer', buyers, 'buyer'); }
-  }
+function fixSttCell(row, indexNumber) {
+  try {
+    if (row.getNumCells() > 0) {
+      const cell0 = row.getCell(0);
+      const txt = cell0.getText().trim();
+      if (!isNaN(txt) || txt === '' || txt === '1' || txt === '2' || txt === '3') {
+        cell0.setText(String(indexNumber));
+      }
+    }
+  } catch(e) {}
+}
 
-  function renderList(elemId, arr, type) {
-    const el = document.getElementById(elemId);
-    if (arr.length === 0) { el.innerHTML = '<div class="person-empty">Chưa có người nào được thêm</div>'; return; }
-    el.innerHTML = arr.map((p, idx) => `
-      <div class="person-tag">
-        <div class="tag-actions">
-          <button class="btn-tag-action btn-edit-person" title="Chỉnh sửa" onclick="editPerson('${type}', ${idx})">✏️</button>
-          <button class="btn-tag-action btn-del-person" title="Xóa" onclick="deletePerson('${type}', ${idx})">&times;</button>
-        </div>
-        <div class="person-tag-name"><span>${idx + 1}.</span> ${p.hoTen}</div>
-        <div class="person-tag-sub">CCCD: <b>${p.cccd}</b> | Sinh: ${p.ngaySinh}<br>${p.diaChi ? `Thường trú: <span class="addr-highlight">${p.diaChi}</span>` : ''}</div>
-      </div>
-    `).join('');
-  }
+function fillRowData(row, person, prefix) {
+  if (!person) return;
+  row.replaceText(`{{HO_TEN_${prefix}}}`, person.hoTen || '');
+  row.replaceText(`{{CCCD_${prefix}}}`, person.cccd || '');
+  row.replaceText(`{{CMND_${prefix}}}`, person.cmnd || '');
+  row.replaceText(`{{NGAY_SINH_${prefix}}}`, person.ngaySinh || '');
+  row.replaceText(`{{GIOI_TINH_${prefix}}}`, person.gioiTinh || '');
+  row.replaceText(`{{THUONG_TRU_${prefix}}}`, person.diaChi || '');
+  row.replaceText(`{{NGAY_CAP_${prefix}}}`, person.ngayCap || '');
+}
 
-  function deletePerson(type, idx) {
-    if (type === 'seller') sellers.splice(idx, 1); else buyers.splice(idx, 1);
-    renderList(type === 'seller' ? 'list-seller' : 'list-buyer', type === 'seller' ? sellers : buyers, type);
-  }
+function logAndSaveFile(copyFile, payload, loai, principalName) {
+  const targetFolder = DriveApp.getFolderById(TARGET_FOLDER_ID);
+  
+  let subFolders = targetFolder.getFoldersByName(loai);
+  let subFolder = subFolders.hasNext() ? subFolders.next() : targetFolder.createFolder(loai);
+  
+  let thua = payload.soThua || ''; let to = payload.soTo || '';
+  let fileName = principalName;
+  if (to && thua) fileName = `${principalName} - Tờ ${to} - Thửa ${thua}`;
+  else if (to) fileName = `${principalName} - Tờ ${to}`;
+  else if (thua) fileName = `${principalName} - Thửa ${thua}`;
+  
+  copyFile.moveTo(subFolder); 
+  copyFile.setName(fileName);
+  copyFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  
+  try {
+    let sheetFiles = targetFolder.getFilesByName("Thống Kê Hồ Sơ Xuất File - VP ĐKĐĐ Biên Hòa");
+    let sheet, ss;
+    if (sheetFiles.hasNext()) {
+      ss = SpreadsheetApp.open(sheetFiles.next()); sheet = ss.getSheets()[0];
+    } else {
+      ss = SpreadsheetApp.create("Thống Kê Hồ Sơ Xuất File - VP ĐKĐĐ Biên Hòa");
+      sheet = ss.getSheets()[0];
+      sheet.appendRow(["Thời gian xuất", "Tên chủ hồ sơ / Bên nhận", "Số tờ bản đồ", "Số thửa đất", "Loại hình biến động", "Phường / Xã"]);
+      DriveApp.getFileById(ss.getId()).moveTo(targetFolder);
+    }
+    let timeStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+    sheet.appendRow([timeStr, principalName, to, thua, loai, payload.phuong || '']);
+  } catch(e) {}
+  
+  return copyFile.getId();
+}
 
-  function setupModalFieldsForTarget(target) {
-    const isSeller = target === 'seller';
-    document.getElementById('fieldCmndWrap').style.display = 'none'; document.getElementById('fieldGioiTinhWrap').style.display = 'none';
-    if (isSeller) { document.getElementById('fieldNgayCapWrap').style.display = 'none'; document.getElementById('fieldDiaChiWrap').style.display = 'none'; } 
-    else { document.getElementById('fieldNgayCapWrap').style.display = 'block'; document.getElementById('fieldDiaChiWrap').style.display = 'block'; }
-  }
+function processDocumentGeneration(payload) {
+  try {
+    const targetFolder = DriveApp.getFolderById(TARGET_FOLDER_ID);
+    const loai = payload.loaiBienDong || '';
+    
+    const isCapDoi = loai.includes("Cấp đổi"); 
+    const isDangKyTaiSan = loai.includes("Đăng ký cấp tài sản"); 
+    const isTangChoOrThuaKe = loai.includes("Tặng cho") || loai.includes("Thừa kế");
+    
+    let selectedTemplateId = ''; 
+    let filePrefix = 'Ho_So';
+    
+    if (isCapDoi) { 
+      selectedTemplateId = extractDocId(TEMPLATE_CAP_DOI_ID); 
+      filePrefix = 'CapDoi'; 
+    } else if (isDangKyTaiSan) { 
+      selectedTemplateId = extractDocId(TEMPLATE_TAI_SAN_ID); 
+      filePrefix = 'CapTaiSanNhaO'; 
+    } else if (isTangChoOrThuaKe) {
+      selectedTemplateId = extractDocId(TEMPLATE_TANG_CHO_THUA_KE_ID); 
+      filePrefix = `Thua_${payload.soThua || ''}_To_${payload.soTo || ''}`; 
+    } else { 
+      selectedTemplateId = extractDocId(TEMPLATE_CHUYEN_NHUONG_ID); 
+      filePrefix = `Thua_${payload.soThua || ''}_To_${payload.soTo || ''}`; 
+    }
 
-  function editPerson(type, idx) {
-    activeTarget = type; editingIndex = idx; const p = (type === 'seller' ? sellers : buyers)[idx];
-    setupModalFieldsForTarget(type);
-    document.getElementById('manualModalTitle').innerText = 'Chỉnh Sửa Thông Tin Cá Nhân';
-    document.getElementById('m_hoTen').value = p.hoTen || ''; document.getElementById('m_cccd').value = p.cccd || '';
-    document.getElementById('m_cmnd').value = ''; document.getElementById('m_ngaySinh').value = p.ngaySinh || '';
-    document.getElementById('m_gioiTinh').value = p.gioiTinh || 'Nam'; document.getElementById('m_ngayCap').value = p.ngayCap || '';
-    document.getElementById('m_diaChi').value = p.diaChi || ''; document.getElementById('manualModal').style.display = 'flex';
-  }
+    const effectiveSellers = (isCapDoi || isDangKyTaiSan) ? [] : payload.sellers;
+    const effectiveBuyers = payload.buyers;
 
-  function openManualModal(target) {
-    activeTarget = target; editingIndex = -1; setupModalFieldsForTarget(target);
-    const val = document.getElementById('loaiBienDong').value;
-    let title = target === 'seller' ? 'Thêm Bên Chuyển Nhượng (Bán)' : 'Thêm Bên Nhận Chuyển Nhượng (Mua)';
-    if (val.includes("Thỏa thuận") || val.includes("Tòa án")) title = target === 'seller' ? 'Thêm Bên Chuyển Quyền' : 'Thêm Bên Nhận Chuyển Quyền';
-    else if (val.includes("Đăng ký cấp tài sản")) title = 'Thêm Người Đứng Đơn Đăng Ký Tài Sản';
-    document.getElementById('manualModalTitle').innerText = title;
-    document.getElementById('m_hoTen').value = ''; document.getElementById('m_cccd').value = ''; document.getElementById('m_cmnd').value = ''; document.getElementById('m_ngaySinh').value = '';
-    document.getElementById('m_gioiTinh').value = 'Nam'; document.getElementById('m_ngayCap').value = ''; document.getElementById('m_diaChi').value = '';
-    document.getElementById('manualModal').style.display = 'flex';
-  }
+    const templateFile = DriveApp.getFileById(selectedTemplateId);
+    const copyFile = templateFile.makeCopy(`${filePrefix}_${new Date().getTime()}`, targetFolder);
+    const copyDocId = copyFile.getId();
+    const doc = DocumentApp.openById(copyDocId);
+    const body = doc.getBody();
 
-  function closeManualModal() { document.getElementById('manualModal').style.display = 'none'; }
+    body.replaceText('{{KHOI_MAU_28}}', generateMau28Block(effectiveBuyers, payload.sdt));
 
-  function saveManualPerson() {
-    const hoTen = document.getElementById('m_hoTen').value.trim(); const cccd = document.getElementById('m_cccd').value.trim();
-    if (!hoTen || !cccd) { alert("Vui lòng điền tối thiểu Họ tên và Số CCCD!"); return; }
-    const isSeller = activeTarget === 'seller';
-    const p = {
-      hoTen: hoTen.toUpperCase(), cccd: cccd, cmnd: 'Không',
-      ngaySinh: document.getElementById('m_ngaySinh').value.trim(), gioiTinh: document.getElementById('m_gioiTinh').value,
-      ngayCap: isSeller ? '' : document.getElementById('m_ngayCap').value.trim(), diaChi: isSeller ? '' : document.getElementById('m_diaChi').value.trim()
+    if (!isCapDoi) {
+      const tables = body.getTables();
+      processTableRows(tables, '{{HO_TEN_BAN}}', effectiveSellers, 'BAN');
+      processTableRows(tables, '{{HO_TEN_MUA}}', effectiveBuyers, 'MUA');
+    }
+
+    const firstBuyer = (effectiveBuyers && effectiveBuyers.length > 0) ? effectiveBuyers[0] : {};
+    const joinNames = (list) => (list && list.length > 0) ? list.map(p => p.hoTen).join(' và ') : '';
+    const joinCccd = (list) => (list && list.length > 0) ? list.map(p => `${p.cccd} (${p.hoTen})`).join('; ') : '';
+    const joinNgaySinh = (list) => (list && list.length > 0) ? list.map(p => `${p.ngaySinh} (${p.hoTen})`).join('; ') : '';
+    const joinDiaChi = (list) => (list && list.length > 0) ? list.map(p => `${p.diaChi} (${p.hoTen})`).join('; ') : '';
+    const joinNgayCap = (list) => (list && list.length > 0) ? list.map(p => `${p.ngayCap} (${p.hoTen})`).join('; ') : '';
+    const joinGioiTinh = (list) => (list && list.length > 0) ? list.map(p => `${p.gioiTinh} (${p.hoTen})`).join('; ') : '';
+
+    const replaceMap = {
+      '{{LOAI_BIEN_DONG}}': loai, '{{SO_THUA}}': payload.soThua || '', '{{SO_TO}}': payload.soTo || '', '{{PHUONG}}': payload.phuong || '',
+      '{{KHU_PHO}}': payload.khuPho || '', '{{SDT}}': payload.sdt || '', '{{DT_XAY_DUNG}}': payload.dtXayDung || '', '{{DT_SAN}}': payload.dtSan || '',
+      '{{HO_TEN_MUA}}': firstBuyer.hoTen || '', '{{CCCD_MUA}}': firstBuyer.cccd || '', '{{NGAY_SINH_MUA}}': firstBuyer.ngaySinh || '',
+      '{{THUONG_TRU_MUA}}': firstBuyer.diaChi || '', '{{NGAY_CAP_MUA}}': firstBuyer.ngayCap || '', '{{GIOI_TINH_MUA}}': firstBuyer.gioiTinh || '',
+      '{{HO_TEN_BAN}}': joinNames(effectiveSellers), '{{CCCD_BAN}}': joinCccd(effectiveSellers), '{{NGAY_SINH_BAN}}': joinNgaySinh(effectiveSellers),
+      '{{THUONG_TRU_BAN}}': joinDiaChi(effectiveSellers), '{{NGAY_CAP_BAN}}': joinNgayCap(effectiveSellers), '{{GIOI_TINH_BAN}}': joinGioiTinh(effectiveSellers)
     };
-    if (editingIndex >= 0) {
-      if (isSeller) sellers[editingIndex] = p; else buyers[editingIndex] = p;
-      renderList(isSeller ? 'list-seller' : 'list-buyer', isSeller ? sellers : buyers, activeTarget);
-    } else { addPerson(p, activeTarget); }
-    closeManualModal();
-  }
 
-  function handleGenerateDocs() {
-    if (!validateSection2()) { alert("Vui lòng điền đầy đủ thông tin bắt buộc tại Mục 2!"); window.scrollTo({ top: 150, behavior: 'smooth' }); return; }
-    const loai = document.getElementById('loaiBienDong').value;
-    const isCapDoi = loai.includes("Cấp đổi"); const isDangKyTaiSan = loai.includes("Đăng ký cấp tài sản"); const isTangChoOrThuaKe = loai.includes("Tặng cho") || loai.includes("Thừa kế");
-    if (buyers.length === 0) { alert("Vui lòng thêm ít nhất 1 người ở Bên nhận / Bên đứng đơn!"); return; }
-    if (!isCapDoi && !isDangKyTaiSan && !isTangChoOrThuaKe && sellers.length === 0) { alert("Vui lòng thêm ít nhất 1 người ở Bên chuyển nhượng / Bên chuyển quyền!"); return; }
+    for (let key in replaceMap) {
+      body.replaceText(key, replaceMap[key]);
+    }
     
-    const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerHTML = `<span>⏳</span> Đang thực hiện`;
-    document.getElementById('loading-indicator').style.display = 'flex';
-    
-    const payload = {
-      loaiBienDong: loai, soThua: isCapDoi ? '' : document.getElementById('soThua').value, soTo: isCapDoi ? '' : document.getElementById('soTo').value, 
-      phuong: isCapDoi ? '' : document.getElementById('phuong').value, khuPho: isCapDoi ? '' : document.getElementById('khuPho').value, 
-      sdt: isCapDoi ? document.getElementById('sdtCapDoi').value : document.getElementById('sdt').value,
-      dtXayDung: isDangKyTaiSan ? document.getElementById('dtXayDung').value : '', dtSan: isDangKyTaiSan ? document.getElementById('dtSan').value : '',
-      sellers: sellers, buyers: buyers
-    };
-    
-    fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('loading-indicator').style.display = 'none';
-      btn.disabled = false; btn.innerHTML = `<span>📑</span> Xuất tờ khai`;
-      if (data.status === 'success') {
-        document.getElementById('downloadFileBtn').href = data.url;
-        document.getElementById('downloadModal').style.display = 'flex';
-      } else { alert("Lỗi từ máy chủ: " + (data.message || "Không xác định")); }
-    })
-    .catch(err => {
-      document.getElementById('loading-indicator').style.display = 'none';
-      btn.disabled = false; btn.innerHTML = `<span>📑</span> Xuất tờ khai`;
-      alert("Lỗi kết nối tới máy chủ.");
-    });
-  }
+    doc.saveAndClose();
 
-  function closeDownloadModal() { document.getElementById('downloadModal').style.display = 'none'; }
-  onLoaiBienDongChange();
-</script>
-</body>
-</html>
+    let principalName = "";
+    if (isCapDoi || isDangKyTaiSan) principalName = (effectiveBuyers && effectiveBuyers.length > 0) ? effectiveBuyers[0].hoTen : "HoSo";
+    else principalName = (effectiveBuyers && effectiveBuyers.length > 0) ? effectiveBuyers.map(b => b.hoTen).join(' và ') : "HoSo";
+
+    logAndSaveFile(copyFile, payload, loai, principalName);
+    
+    return `https://docs.google.com/feeds/download/documents/export/Export?id=${copyDocId}&exportFormat=pdf`;
+
+  } catch (err) {
+    throw new Error("Lỗi xử lý tài liệu: " + err.message);
+  }
+}
+
+// =====================================================================
+// TÍNH NĂNG BẢO MẬT: TỰ ĐỘNG XÓA HỒ SƠ SAU 120 PHÚT (KHÔNG LƯU VẾT)
+// =====================================================================
+
+/**
+ * Quét toàn bộ thư mục TARGET_FOLDER_ID và các thư mục con.
+ * Xóa vĩnh viễn/đưa vào thùng rác các file hồ sơ có thời gian tạo > 120 phút.
+ * Giữ lại nguyên vẹn file "Thống Kê Hồ Sơ Xuất File - VP ĐKĐĐ Biên Hòa".
+ */
+function autoDeleteOldFiles() {
+  try {
+    const targetFolder = DriveApp.getFolderById(TARGET_FOLDER_ID);
+    const cutoffTime = new Date().getTime() - (120 * 60 * 1000); // Mốc 120 phút trước
+    
+    cleanFolder(targetFolder, cutoffTime);
+    
+    const subFolders = targetFolder.getFolders();
+    while (subFolders.hasNext()) {
+      cleanFolder(subFolders.next(), cutoffTime);
+    }
+  } catch (e) {
+    Logger.log("Lỗi tự động xóa file: " + e.toString());
+  }
+}
+
+function cleanFolder(folder, cutoffTime) {
+  const files = folder.getFiles();
+  while (files.hasNext()) {
+    const file = files.next();
+    // Bỏ qua file Thống Kê tổng
+    if (file.getName().indexOf("Thống Kê Hồ Sơ Xuất File") !== -1) continue;
+    
+    if (file.getDateCreated().getTime() < cutoffTime) {
+      file.setTrashed(true); // Đưa vào thùng rác để dọn sạch dấu vết
+    }
+  }
+}
+
+/**
+ * HÀM THIẾT LẬP TRIGGER TỰ ĐỘNG (CHẠY 1 LẦN DUY NHẤT)
+ * Hệ thống sẽ tự động quét và xóa file mỗi 30 phút một lần.
+ */
+function setupAutoDeleteTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'autoDeleteOldFiles') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+  
+  ScriptApp.newTrigger('autoDeleteOldFiles')
+    .timeBased()
+    .everyMinutes(30)
+    .create();
+}
