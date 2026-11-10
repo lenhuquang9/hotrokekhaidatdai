@@ -258,7 +258,7 @@
         <div class="action-row">
           <button class="btn-act btn-qr-scan" onclick="requestConsent('scan', 'seller')">📷 QUÉT QR</button>
           <button class="btn-act btn-qr-capture" onclick="requestConsent('upload', 'seller')">Tải CCCD</button>
-          <button class="btn-act btn-manual-input" onclick="openManualModal('seller')">➕ Nhập tay</button>
+          <button class="btn-act btn-manual-input" onclick="requestConsent('manual', 'seller')">➕ Nhập tay</button>
         </div>
         <div class="person-list" id="list-seller"></div>
       </div>
@@ -268,7 +268,7 @@
         <div class="action-row">
           <button class="btn-act btn-qr-scan" onclick="requestConsent('scan', 'buyer')">📷 QUÉT QR</button>
           <button class="btn-act btn-qr-capture" onclick="requestConsent('upload', 'buyer')">Tải CCCD</button>
-          <button class="btn-act btn-manual-input" onclick="openManualModal('buyer')">➕ Nhập tay</button>
+          <button class="btn-act btn-manual-input" onclick="requestConsent('manual', 'buyer')">➕ Nhập tay</button>
         </div>
         <div class="person-list" id="list-buyer"></div>
       </div>
@@ -456,6 +456,8 @@
           startScanner(pendingTarget);
       } else if (pendingAction === 'upload') {
           triggerNativeInput(pendingTarget);
+      } else if (pendingAction === 'manual') {
+          openManualModal(pendingTarget);
       }
       // Reset
       pendingAction = null;
