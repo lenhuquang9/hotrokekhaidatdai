@@ -413,7 +413,11 @@
 
   let nativeBarcodeDetector = null;
   if ('BarcodeDetector' in window) {
-    nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    try {
+      nativeBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    } catch (e) {
+      console.warn("Máy tính này không hỗ trợ phần cứng BarcodeDetector, sẽ tự động chuyển sang thư viện dự phòng.");
+    }
   }
 
   // LOGIC ĐIỀU KHIỂN HỘP THOẠI XÁC NHẬN
